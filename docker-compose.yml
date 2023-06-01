@@ -40,7 +40,26 @@ services:
       - CollectionName=AuctionCollection
       - BaseURIUser=http://userservice
       - BaseURIProduct=http://productservice
-      - Rabbit=messagebroker
+      - RabbitMQ=messagebroker
+
+  serviceworker:
+    container_name: serviceworker
+    image: rednecksinc/serviceworker:latest
+    ports:
+      - "5005:80"
+    networks:
+      - default
+    environment:
+      - RabbitMQ=messagebroker
+      - ConnectionString=mongodb://auktionshusdb:27017
+      - DatabaseName=AuktionshusDb
+      - CollectionName=AuctionCollection
+    deploy:
+      restart_policy:
+          condition: on-failure
+          delay: 10s
+          max_attempts: 5
+          window: 60s
 
   auktionshusdb:
     container_name: auktionshusdb
@@ -50,7 +69,7 @@ services:
     networks:
       - default
     environment:
-      - RabbitMQ=value
+      - RabbitMQ=messagebroker
 
   messagebroker:
     container_name: messagebroker
