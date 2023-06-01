@@ -38,6 +38,7 @@ services:
       - ConnectionString=mongodb://auktionshusdb:27017
       - DatabaseName=AuktionshusDb
       - CollectionName=AuctionCollection
+      - BidCollection=BidCollection
       - BaseURIUser=http://userservice
       - BaseURIProduct=http://productservice
       - RabbitMQ=messagebroker
@@ -92,14 +93,31 @@ services:
       - default
 
   swagger-ui:
-   image: swaggerapi/swagger-ui
-   container_name: swagger_ui_container
-   ports:
+    image: swaggerapi/swagger-ui
+    container_name: swagger_ui_container
+    ports:
       - "8080:8080"
-   volumes:
+    volumes:
       - ./doc:/usr/share/nginx/html/doc
-   environment:
+    environment:
       API_URL: auktion:5004
+
+  loki:
+    image: grafana/loki
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/local-config.yaml
+    networks:
+      - default
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    networks:
+      - default
+    volumes:
+      - grafana_data:/var/lib/grafana
 
 networks:
   default:
@@ -107,3 +125,4 @@ networks:
 
 volumes:
   docs:
+  grafana_data:
