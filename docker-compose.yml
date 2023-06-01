@@ -2,6 +2,7 @@ version: '3.8'
 
 services:
   user:
+    container_name: userservice
     image: rednecksinc/brugerservice:latest
     ports:
       - "5002:80"
@@ -10,10 +11,11 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ConnectionString=mongodb://auktionshusdb:27017
-      - DatabaseName=UsersDb
+      - DatabaseName=AuktionshusDb
       - CollectionName=Users
 
   product:
+    container_name: productservice
     image: rednecksinc/produktservice:latest
     ports:
       - "5003:80"
@@ -22,10 +24,11 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ConnectionString=mongodb://auktionshusdb:27017
-      - DatabaseName=ProductDb
+      - DatabaseName=AuktionshusDb
       - CollectionName=ProductCatalogue
 
   auktion:
+    container_name: auktionservice
     image: rednecksinc/auctionservice:latest
     ports:
       - "5004:80"
@@ -33,8 +36,11 @@ services:
       - default
     environment:
       - ConnectionString=mongodb://auktionshusdb:27017
-      - DatabaseName=Auction
-      - CollectionAuction=AuctionCollection
+      - DatabaseName=AuktionshusDb
+      - CollectionName=AuctionCollection
+      - BaseURIUser=http://userservice
+      - BaseURIProduct=http://productservice
+      - Rabbit=messagebroker
 
   auktionshusdb:
     container_name: auktionshusdb
@@ -46,6 +52,15 @@ services:
     environment:
       - RabbitMQ=value
 
+  messagebroker:
+    container_name: messagebroker
+    image: rabbitmq:management
+    ports:
+      - "15672:15672"
+      - "5672:5672"
+    networks:
+      - default
+
   nginx:
     image: nginx:latest
     volumes:
@@ -56,6 +71,16 @@ services:
       - "4000:4000"
     networks:
       - default
+
+  swagger-ui:
+   image: swaggerapi/swagger-ui
+   container_name: swagger_ui_container
+   ports:
+      - "8080:8080"
+   volumes:
+      - ./doc:/usr/share/nginx/html/doc
+   environment:
+      API_URL: auktion:5004
 
 networks:
   default:
